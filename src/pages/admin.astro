@@ -1,0 +1,1115 @@
+---
+import { createClient } from "@supabase/supabase-js";
+import "../styles/global.css";
+
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect("/login");
+}
+
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+);
+
+let sessionResult;
+
+try {
+  sessionResult = await supabase.auth.setSession({
+    access_token: accessToken.value,
+    refresh_token: refreshToken.value,
+  });
+
+  if (sessionResult.error) {
+    Astro.cookies.delete("sb-access-token", { path: "/" });
+    Astro.cookies.delete("sb-refresh-token", { path: "/" });
+    return Astro.redirect("/login");
+  }
+} catch {
+  Astro.cookies.delete("sb-access-token", { path: "/" });
+  Astro.cookies.delete("sb-refresh-token", { path: "/" });
+  return Astro.redirect("/login");
+}
+
+const user = sessionResult.data.user;
+
+// busca os projetos
+const { data: projects, error: projectsError } = await supabase
+  .from("projects")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+if (projectsError) {
+  console.error("Erro ao buscar projetos:", projectsError.message);
+}
+
+// Filtros
+const { data: filterGroups, error: filterGroupsError } = await supabase
+  .from("filter_groups")
+  .select("*")
+  .order("sort_order", { ascending: true });
+
+const { data: filterOptions, error: filterOptionsError } = await supabase
+  .from("filter_options")
+  .select("*")
+  .order("sort_order", { ascending: true });
+
+if (filterGroupsError) {
+  console.error("Erro ao buscar grupos de filtro:", filterGroupsError.message);
+}
+
+if (filterOptionsError) {
+  console.error("Erro ao buscar opções de filtro:", filterOptionsError.message);
+}
+---
+
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>ClevProj | Admin</title>
+  </head>
+
+  <body class="min-h-screen bg-black text-white px-4 py-6 sm:px-6 lg:px-8">
+    <div id="stars" class="stars fixed inset-0 z-0"></div>
+
+    <main class="relative z-10 mx-auto max-w-7xl">
+      <div
+        class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div class="min-w-0">
+          <h1 class="text-2xl font-bold sm:text-3xl">Painel Admin</h1>
+          <p class="text-sm text-zinc-400 break-all sm:text-base">
+            Logado como {user?.email}
+          </p>
+        </div>
+
+        <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
+          <a
+            href="/#"
+            class="rounded-lg bg-white px-4 py-2 text-center font-medium text-black"
+          >
+            Voltar
+          </a>
+
+          <a
+            href="/api/auth/signout"
+            class="rounded-lg bg-white px-4 py-2 text-center font-medium text-black"
+          >
+            Deslogar
+          </a>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <!-- lista de projetos -->
+          <div
+            class="w-full rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-6 lg:w-3/5"
+          >
+            <div
+              class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <h2 class="text-xl font-bold sm:text-2xl">Projetos</h2>
+              <span class="text-sm text-zinc-400">
+                {(projects ?? []).length} projeto(s)
+              </span>
+            </div>
+
+            <div class="space-y-4">
+              {
+                (projects ?? []).map((project) => (
+                  <div
+                    class="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+                    data-project-card
+                    data-id={project.id ?? ""}
+                    data-title={project.title ?? ""}
+                    data-description={project.description ?? ""}
+                    data-image_url={project.image_url ?? ""}
+                    data-project_url={project.project_url ?? ""}
+                    data-github_url={project.github_url ?? ""}
+                    data-tags={
+                      Array.isArray(project.tags)
+                        ? project.tags.join(", ")
+                        : (project.tags ?? "")
+                    }
+                  >
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div class="min-w-0 flex-1">
+                        <h3 class="break-words text-base font-semibold sm:text-lg">
+                          {project.title}
+                        </h3>
+
+                        <p class="mt-2 break-words text-sm text-zinc-400 line-clamp-3">
+                          {project.description}
+                        </p>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                          {project.project_url && (
+                            <a
+                              href={project.project_url}
+                              target="_blank"
+                              class="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs"
+                            >
+                              Projeto
+                            </a>
+                          )}
+
+                          {project.github_url && (
+                            <a
+                              href={project.github_url}
+                              target="_blank"
+                              class="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs"
+                            >
+                              GitHub
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row lg:shrink-0">
+                        <button
+                          type="button"
+                          class="edit-btn rounded-lg bg-white px-4 py-2 font-medium text-black"
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          class="delete-project-btn rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition hover:bg-red-500"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+
+          <!-- formulário -->
+          <div
+            class="w-full rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-6 lg:w-2/5"
+          >
+            <h2
+              id="project-form-title"
+              class="mb-2 text-xl font-bold sm:text-2xl"
+            >
+              Novo projeto
+            </h2>
+
+            <p class="mb-5 text-sm text-zinc-400">
+              Preencha os campos para criar um projeto ou clique em "Editar" em
+              um item da lista.
+            </p>
+
+            <form id="edit-form" class="space-y-4">
+              <input type="hidden" name="id" id="project-id" />
+
+              <div>
+                <label
+                  for="project-title"
+                  class="mb-2 block text-sm text-zinc-300"
+                >
+                  Título
+                </label>
+                <input
+                  id="project-title"
+                  name="title"
+                  type="text"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  for="project-description"
+                  class="mb-2 block text-sm text-zinc-300"
+                >
+                  Descrição
+                </label>
+                <textarea
+                  id="project-description"
+                  name="description"
+                  class="min-h-[130px] w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none"
+                  required></textarea>
+              </div>
+
+              <div>
+                <label
+                  for="project-image_url"
+                  class="mb-2 block text-sm text-zinc-300"
+                >
+                  URL da imagem
+                </label>
+                <input
+                  id="project-image_url"
+                  name="image_url"
+                  type="text"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="project-project_url"
+                  class="mb-2 block text-sm text-zinc-300"
+                >
+                  URL do projeto
+                </label>
+                <input
+                  id="project-project_url"
+                  name="project_url"
+                  type="text"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="project-github_url"
+                  class="mb-2 block text-sm text-zinc-300"
+                >
+                  URL do GitHub
+                </label>
+                <input
+                  id="project-github_url"
+                  name="github_url"
+                  type="text"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="project-tags"
+                  class="mb-2 block text-sm text-zinc-300"
+                >
+                  Tags
+                </label>
+                <input
+                  id="project-tags"
+                  name="tags"
+                  type="text"
+                  placeholder="Escola, Contabilidade, etc. (separadas por vírgula)"
+                  class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none"
+                />
+              </div>
+
+              <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                <button
+                  type="submit"
+                  id="project-submit-btn"
+                  class="rounded-lg bg-white px-4 py-3 font-semibold text-black"
+                >
+                  Criar projeto
+                </button>
+
+                <button
+                  type="button"
+                  id="clear-form"
+                  class="rounded-lg border border-zinc-700 px-4 py-3 font-medium"
+                >
+                  Limpar
+                </button>
+              </div>
+
+              <p id="form-message" class="text-sm text-zinc-400"></p>
+            </form>
+          </div>
+        </div>
+
+        <section
+          class="mt-6 w-full rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-6 lg:mt-0"
+        >
+          <h2 class="mb-5 text-xl font-bold sm:text-2xl">Filtros globais</h2>
+
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- grupos -->
+            <div
+              class="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:p-5"
+            >
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold">Categorias</h3>
+              </div>
+
+              <div class="space-y-3">
+                {
+                  (filterGroups ?? []).map((group) => (
+                    <div
+                      class="rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+                      data-filter-group-card
+                      data-id={group.id ?? ""}
+                      data-slug={group.slug ?? ""}
+                      data-title={group.title ?? ""}
+                      data-sort_order={group.sort_order ?? 0}
+                      data-is_active={String(group.is_active ?? true)}
+                    >
+                      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                          <p class="font-medium break-words">{group.title}</p>
+                          <p class="text-sm text-zinc-400 break-all">
+                            {group.slug}
+                          </p>
+                        </div>
+
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                          <button
+                            type="button"
+                            class="edit-group-btn rounded-lg bg-white px-3 py-2 font-medium text-black"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="delete-group-btn rounded-lg bg-red-600 px-3 py-2 font-medium text-white transition hover:bg-red-500"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+
+            <!-- opções -->
+            <div
+              class="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:p-5"
+            >
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold">Checkmarks</h3>
+              </div>
+
+              <div class="space-y-3">
+                {
+                  (filterOptions ?? []).map((option) => (
+                    <div
+                      class="rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+                      data-filter-option-card
+                      data-id={option.id ?? ""}
+                      data-group_id={option.group_id ?? ""}
+                      data-slug={option.slug ?? ""}
+                      data-label={option.label ?? ""}
+                      data-sort_order={option.sort_order ?? 0}
+                      data-is_active={String(option.is_active ?? true)}
+                    >
+                      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                          <p class="font-medium break-words">{option.label}</p>
+                          <p class="text-sm text-zinc-400 break-all">
+                            {option.slug}
+                          </p>
+                        </div>
+
+                        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                          <button
+                            type="button"
+                            class="edit-option-btn rounded-lg bg-white px-3 py-2 font-medium text-black"
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            class="delete-option-btn rounded-lg bg-red-600 px-3 py-2 font-medium text-white transition hover:bg-red-500"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- form grupo -->
+            <div
+              class="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:p-5"
+            >
+              <h3 class="mb-4 text-lg font-semibold">Editar categoria</h3>
+
+              <form id="group-form" class="space-y-4">
+                <input type="hidden" id="group-id" name="id" />
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300">Título</label>
+                  <input
+                    id="group-title"
+                    name="title"
+                    type="text"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300">Slug</label>
+                  <input
+                    id="group-slug"
+                    name="slug"
+                    type="text"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300">Ordem</label>
+                  <input
+                    id="group-sort-order"
+                    name="sort_order"
+                    type="number"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                  />
+                </div>
+
+                <label class="flex items-center gap-3">
+                  <input id="group-active" name="is_active" type="checkbox" />
+                  <span>Ativo</span>
+                </label>
+
+                <div class="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-white px-4 py-3 font-semibold text-black"
+                  >
+                    Salvar categoria
+                  </button>
+
+                  <button
+                    type="button"
+                    id="clear-group-form"
+                    class="rounded-lg border border-zinc-700 px-4 py-3"
+                  >
+                    Limpar
+                  </button>
+                </div>
+
+                <p id="group-message" class="text-sm text-zinc-400"></p>
+              </form>
+            </div>
+
+            <!-- form opção -->
+            <div
+              class="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:p-5"
+            >
+              <h3 class="mb-4 text-lg font-semibold">Editar checkmark</h3>
+
+              <form id="option-form" class="space-y-4">
+                <input type="hidden" id="option-id" name="id" />
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300"
+                    >Categoria</label
+                  >
+                  <select
+                    id="option-group-id"
+                    name="group_id"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                    required
+                  >
+                    <option value="">Selecione</option>
+                    {
+                      (filterGroups ?? []).map((group) => (
+                        <option value={group.id}>{group.title}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300">Label</label>
+                  <input
+                    id="option-label"
+                    name="label"
+                    type="text"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300">Slug</label>
+                  <input
+                    id="option-slug"
+                    name="slug"
+                    type="text"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm text-zinc-300">Ordem</label>
+                  <input
+                    id="option-sort-order"
+                    name="sort_order"
+                    type="number"
+                    class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3"
+                  />
+                </div>
+
+                <label class="flex items-center gap-3">
+                  <input id="option-active" name="is_active" type="checkbox" />
+                  <span>Ativo</span>
+                </label>
+
+                <div class="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-white px-4 py-3 font-semibold text-black"
+                  >
+                    Salvar checkmark
+                  </button>
+
+                  <button
+                    type="button"
+                    id="clear-option-form"
+                    class="rounded-lg border border-zinc-700 px-4 py-3"
+                  >
+                    Limpar
+                  </button>
+                </div>
+
+                <p id="option-message" class="text-sm text-zinc-400"></p>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+
+  <script>
+    const cards = document.querySelectorAll<HTMLElement>("[data-project-card]");
+    const form = document.getElementById("edit-form") as HTMLFormElement | null;
+    const message = document.getElementById(
+      "form-message",
+    ) as HTMLParagraphElement | null;
+    const clearBtn = document.getElementById(
+      "clear-form",
+    ) as HTMLButtonElement | null;
+
+    const idInput = document.getElementById(
+      "project-id",
+    ) as HTMLInputElement | null;
+
+    const titleInput = document.getElementById(
+      "project-title",
+    ) as HTMLInputElement | null;
+
+    const descriptionInput = document.getElementById(
+      "project-description",
+    ) as HTMLTextAreaElement | null;
+
+    const imageUrlInput = document.getElementById(
+      "project-image_url",
+    ) as HTMLInputElement | null;
+
+    const projectUrlInput = document.getElementById(
+      "project-project_url",
+    ) as HTMLInputElement | null;
+
+    const githubUrlInput = document.getElementById(
+      "project-github_url",
+    ) as HTMLInputElement | null;
+
+    const tagsInput = document.getElementById(
+      "project-tags",
+    ) as HTMLInputElement | null;
+
+    const formTitle = document.getElementById(
+      "project-form-title",
+    ) as HTMLHeadingElement | null;
+
+    const submitBtn = document.getElementById(
+      "project-submit-btn",
+    ) as HTMLButtonElement | null;
+
+    function clearForm() {
+      if (
+        !idInput ||
+        !titleInput ||
+        !descriptionInput ||
+        !tagsInput ||
+        !imageUrlInput ||
+        !projectUrlInput ||
+        !githubUrlInput ||
+        !message
+      ) {
+        return;
+      }
+
+      idInput.value = "";
+      titleInput.value = "";
+      descriptionInput.value = "";
+      imageUrlInput.value = "";
+      projectUrlInput.value = "";
+      githubUrlInput.value = "";
+      tagsInput.value = "";
+
+      if (formTitle) formTitle.textContent = "Novo projeto";
+      if (submitBtn) submitBtn.textContent = "Criar projeto";
+
+      message.textContent = "Formulário limpo. Você pode criar um novo projeto.";
+    }
+
+    cards.forEach((card) => {
+      const btn = card.querySelector(".edit-btn") as HTMLButtonElement | null;
+
+      btn?.addEventListener("click", () => {
+        if (
+          !idInput ||
+          !titleInput ||
+          !descriptionInput ||
+          !imageUrlInput ||
+          !projectUrlInput ||
+          !githubUrlInput ||
+          !tagsInput ||
+          !form ||
+          !message
+        ) {
+          return;
+        }
+
+        idInput.value = card.dataset.id ?? "";
+        titleInput.value = card.dataset.title ?? "";
+        descriptionInput.value = card.dataset.description ?? "";
+        imageUrlInput.value = card.dataset.image_url ?? "";
+        projectUrlInput.value = card.dataset.project_url ?? "";
+        githubUrlInput.value = card.dataset.github_url ?? "";
+        tagsInput.value = card.dataset.tags ?? "";
+
+        if (formTitle) formTitle.textContent = "Editar projeto";
+        if (submitBtn) submitBtn.textContent = "Salvar alterações";
+
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+        message.textContent = "Projeto carregado para edição.";
+      });
+    });
+
+    cards.forEach((card) => {
+      const deleteBtn = card.querySelector(
+        ".delete-project-btn",
+      ) as HTMLButtonElement | null;
+
+      deleteBtn?.addEventListener("click", async () => {
+        const id = card.dataset.id ?? "";
+        const title = card.dataset.title ?? "este projeto";
+
+        if (!id) return;
+
+        const confirmed = window.confirm(
+          `Tem certeza que deseja excluir o projeto "${title}"?`,
+        );
+
+        if (!confirmed) return;
+
+        if (message) message.textContent = "Excluindo projeto...";
+
+        const formData = new FormData();
+        formData.append("id", id);
+
+        const response = await fetch("/api/projects/delete", {
+          method: "POST",
+          body: formData,
+        });
+
+        const rawText = await response.text();
+
+        if (!response.ok) {
+          if (message)
+            message.textContent = rawText || "Erro ao excluir projeto.";
+          return;
+        }
+
+        if (message) message.textContent = "Projeto excluído com sucesso.";
+        window.location.reload();
+      });
+    });
+
+    clearBtn?.addEventListener("click", clearForm);
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (
+        !form ||
+        !message ||
+        !idInput ||
+        !titleInput ||
+        !descriptionInput ||
+        !imageUrlInput ||
+        !projectUrlInput ||
+        !githubUrlInput ||
+        !tagsInput
+      ) {
+        return;
+      }
+
+      const isEditing = Boolean(idInput.value.trim());
+
+      message.textContent = isEditing
+        ? "Atualizando projeto..."
+        : "Criando projeto...";
+
+      const formData = new FormData(form);
+      const endpoint = isEditing ? "/api/projects/update" : "/api/projects/create";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        body: formData,
+      });
+
+      const rawText = await response.text();
+
+      if (!response.ok) {
+        message.textContent = rawText || "Erro ao salvar projeto.";
+        return;
+      }
+
+      message.textContent = isEditing
+        ? "Projeto atualizado com sucesso."
+        : "Projeto criado com sucesso.";
+
+      clearForm();
+      window.location.reload();
+    });
+
+    // Filtros
+    const groupCards = document.querySelectorAll<HTMLElement>(
+      "[data-filter-group-card]",
+    );
+    const optionCards = document.querySelectorAll<HTMLElement>(
+      "[data-filter-option-card]",
+    );
+
+    const groupForm = document.getElementById(
+      "group-form",
+    ) as HTMLFormElement | null;
+    const groupMessage = document.getElementById(
+      "group-message",
+    ) as HTMLParagraphElement | null;
+    const clearGroupBtn = document.getElementById(
+      "clear-group-form",
+    ) as HTMLButtonElement | null;
+
+    const groupIdInput = document.getElementById(
+      "group-id",
+    ) as HTMLInputElement | null;
+    const groupTitleInput = document.getElementById(
+      "group-title",
+    ) as HTMLInputElement | null;
+    const groupSlugInput = document.getElementById(
+      "group-slug",
+    ) as HTMLInputElement | null;
+    const groupSortInput = document.getElementById(
+      "group-sort-order",
+    ) as HTMLInputElement | null;
+    const groupActiveInput = document.getElementById(
+      "group-active",
+    ) as HTMLInputElement | null;
+
+    const optionForm = document.getElementById(
+      "option-form",
+    ) as HTMLFormElement | null;
+    const optionMessage = document.getElementById(
+      "option-message",
+    ) as HTMLParagraphElement | null;
+    const clearOptionBtn = document.getElementById(
+      "clear-option-form",
+    ) as HTMLButtonElement | null;
+
+    const optionIdInput = document.getElementById(
+      "option-id",
+    ) as HTMLInputElement | null;
+    const optionGroupInput = document.getElementById(
+      "option-group-id",
+    ) as HTMLSelectElement | null;
+    const optionLabelInput = document.getElementById(
+      "option-label",
+    ) as HTMLInputElement | null;
+    const optionSlugInput = document.getElementById(
+      "option-slug",
+    ) as HTMLInputElement | null;
+    const optionSortInput = document.getElementById(
+      "option-sort-order",
+    ) as HTMLInputElement | null;
+    const optionActiveInput = document.getElementById(
+      "option-active",
+    ) as HTMLInputElement | null;
+
+    function clearGroupForm() {
+      if (
+        !groupIdInput ||
+        !groupTitleInput ||
+        !groupSlugInput ||
+        !groupSortInput ||
+        !groupActiveInput ||
+        !groupMessage
+      )
+        return;
+
+      groupIdInput.value = "";
+      groupTitleInput.value = "";
+      groupSlugInput.value = "";
+      groupSortInput.value = "0";
+      groupActiveInput.checked = true;
+      groupMessage.textContent = "";
+    }
+
+    function clearOptionForm() {
+      if (
+        !optionIdInput ||
+        !optionGroupInput ||
+        !optionLabelInput ||
+        !optionSlugInput ||
+        !optionSortInput ||
+        !optionActiveInput ||
+        !optionMessage
+      )
+        return;
+
+      optionIdInput.value = "";
+      optionGroupInput.value = "";
+      optionLabelInput.value = "";
+      optionSlugInput.value = "";
+      optionSortInput.value = "0";
+      optionActiveInput.checked = true;
+      optionMessage.textContent = "";
+    }
+
+    groupCards.forEach((card) => {
+      const btn = card.querySelector(
+        ".edit-group-btn",
+      ) as HTMLButtonElement | null;
+
+      btn?.addEventListener("click", () => {
+        if (
+          !groupIdInput ||
+          !groupTitleInput ||
+          !groupSlugInput ||
+          !groupSortInput ||
+          !groupActiveInput ||
+          !groupForm ||
+          !groupMessage
+        )
+          return;
+
+        groupIdInput.value = card.dataset.id ?? "";
+        groupTitleInput.value = card.dataset.title ?? "";
+        groupSlugInput.value = card.dataset.slug ?? "";
+        groupSortInput.value = card.dataset.sort_order ?? "0";
+        groupActiveInput.checked = card.dataset.is_active === "true";
+
+        groupForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        groupMessage.textContent = "Categoria carregada para edição.";
+      });
+    });
+
+    groupCards.forEach((card) => {
+      const deleteBtn = card.querySelector(
+        ".delete-group-btn",
+      ) as HTMLButtonElement | null;
+
+      deleteBtn?.addEventListener("click", async () => {
+        const id = card.dataset.id ?? "";
+        const title = card.dataset.title ?? "esta categoria";
+
+        if (!id) return;
+
+        const confirmed = window.confirm(
+          `Tem certeza que deseja excluir a categoria "${title}"?`,
+        );
+
+        if (!confirmed) return;
+
+        if (groupMessage) groupMessage.textContent = "Excluindo categoria...";
+
+        const formData = new FormData();
+        formData.append("id", id);
+
+        const response = await fetch("/api/filters/groups/delete", {
+          method: "POST",
+          body: formData,
+        });
+
+        const rawText = await response.text();
+
+        if (!response.ok) {
+          if (groupMessage) {
+            groupMessage.textContent = rawText || "Erro ao excluir categoria.";
+          }
+          return;
+        }
+
+        if (groupMessage)
+          groupMessage.textContent = "Categoria excluída com sucesso.";
+        window.location.reload();
+      });
+    });
+
+    optionCards.forEach((card) => {
+      const btn = card.querySelector(
+        ".edit-option-btn",
+      ) as HTMLButtonElement | null;
+
+      btn?.addEventListener("click", () => {
+        if (
+          !optionIdInput ||
+          !optionGroupInput ||
+          !optionLabelInput ||
+          !optionSlugInput ||
+          !optionSortInput ||
+          !optionActiveInput ||
+          !optionForm ||
+          !optionMessage
+        )
+          return;
+
+        optionIdInput.value = card.dataset.id ?? "";
+        optionGroupInput.value = card.dataset.group_id ?? "";
+        optionLabelInput.value = card.dataset.label ?? "";
+        optionSlugInput.value = card.dataset.slug ?? "";
+        optionSortInput.value = card.dataset.sort_order ?? "0";
+        optionActiveInput.checked = card.dataset.is_active === "true";
+
+        optionForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        optionMessage.textContent = "Checkmark carregado para edição.";
+      });
+    });
+
+    optionCards.forEach((card) => {
+      const deleteBtn = card.querySelector(
+        ".delete-option-btn",
+      ) as HTMLButtonElement | null;
+
+      deleteBtn?.addEventListener("click", async () => {
+        const id = card.dataset.id ?? "";
+        const label = card.dataset.label ?? "este checkmark";
+
+        if (!id) return;
+
+        const confirmed = window.confirm(
+          `Tem certeza que deseja excluir o checkmark "${label}"?`,
+        );
+
+        if (!confirmed) return;
+
+        if (optionMessage) optionMessage.textContent = "Excluindo checkmark...";
+
+        const formData = new FormData();
+        formData.append("id", id);
+
+        const response = await fetch("/api/filters/options/delete", {
+          method: "POST",
+          body: formData,
+        });
+
+        const rawText = await response.text();
+
+        if (!response.ok) {
+          if (optionMessage) {
+            optionMessage.textContent = rawText || "Erro ao excluir checkmark.";
+          }
+          return;
+        }
+
+        if (optionMessage)
+          optionMessage.textContent = "Checkmark excluído com sucesso.";
+        window.location.reload();
+      });
+    });
+
+    clearGroupBtn?.addEventListener("click", clearGroupForm);
+    clearOptionBtn?.addEventListener("click", clearOptionForm);
+
+    groupForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!groupForm || !groupMessage) return;
+
+      groupMessage.textContent = "Salvando...";
+      const formData = new FormData(groupForm);
+
+      const response = await fetch("/api/filters/groups/save", {
+        method: "POST",
+        body: formData,
+      });
+
+      const rawText = await response.text();
+
+      if (!response.ok) {
+        groupMessage.textContent = rawText || "Erro ao salvar categoria.";
+        return;
+      }
+
+      groupMessage.textContent = "Categoria salva com sucesso.";
+      window.location.reload();
+    });
+
+    optionForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!optionForm || !optionMessage) return;
+
+      optionMessage.textContent = "Salvando...";
+      const formData = new FormData(optionForm);
+
+      const response = await fetch("/api/filters/options/save", {
+        method: "POST",
+        body: formData,
+      });
+
+      const rawText = await response.text();
+
+      if (!response.ok) {
+        optionMessage.textContent = rawText || "Erro ao salvar checkmark.";
+        return;
+      }
+
+      optionMessage.textContent = "Checkmark salvo com sucesso.";
+      window.location.reload();
+    });
+
+    // STARS
+    const starsContainer = document.getElementById("stars");
+
+    if (starsContainer) {
+      const totalStars = 220;
+
+      for (let i = 0; i < totalStars; i++) {
+        const star = document.createElement("div");
+
+        const size = Math.random() * 3 + 1;
+
+        star.style.position = "absolute";
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.background = "white";
+        star.style.borderRadius = "50%";
+
+        star.style.top = Math.random() * 100 + "%";
+        star.style.left = Math.random() * 100 + "%";
+
+        star.style.opacity = `${Math.random()}`;
+
+        star.style.animation = `starFloat ${Math.random() * 50 + 50}s linear infinite`;
+
+        starsContainer.appendChild(star);
+      }
+    }
+  </script>
+</html>

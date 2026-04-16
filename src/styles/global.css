@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+* {
+  scroll-behavior: smooth;
+}
+
+.space-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ESTRELAS */
+.stars {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+@keyframes starFloat {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-200px);
+  }
+}
+
+/* WRAP DO FOGUETE */
+.rocket-wrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 140px;
+  height: 140px;
+  animation: rocketFly 20s linear infinite;
+  z-index: 1;
+}
+
+/* FOGUETE */
+.rocket {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 156px;
+  height: auto;
+  transform: translate(-50%, -50%) rotate(-55deg);
+  transform-origin: center center;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 12px rgba(255,255,255,0.18));
+  animation: rocketTilt 1.8s ease-in-out infinite;
+}
+
+/* RASTRO */
+.rocket-trail {
+  position: absolute;
+  left: 40px;
+  top: 85px;
+  width: 14px;
+  height: 110px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.85) 0%,
+    rgba(125,211,252,0.55) 35%,
+    rgba(59,130,246,0.22) 70%,
+    rgba(59,130,246,0) 100%
+  );
+  transform: rotate(55deg);
+  transform-origin: top center;
+  filter: blur(2px);
+  opacity: 0.9;
+  animation: trailPulse 0.22s ease-in-out infinite alternate;
+}
+
+/* PARTÍCULAS */
+.rocket-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.rocket-particles span {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 0 12px rgba(125,211,252,0.45);
+  opacity: 0;
+  animation: particleBurst 0.9s linear infinite;
+}
+
+/* posições iniciais perto da traseira do foguete */
+.rocket-particles span:nth-child(1) {
+  left: 26px;
+  top: 92px;
+  animation-delay: 0s;
+}
+.rocket-particles span:nth-child(2) {
+  left: 32px;
+  top: 96px;
+  animation-delay: 0.15s;
+}
+.rocket-particles span:nth-child(3) {
+  left: 22px;
+  top: 98px;
+  animation-delay: 0.3s;
+}
+.rocket-particles span:nth-child(4) {
+  left: 28px;
+  top: 102px;
+  animation-delay: 0.45s;
+}
+.rocket-particles span:nth-child(5) {
+  left: 18px;
+  top: 94px;
+  animation-delay: 0.6s;
+}
+.rocket-particles span:nth-child(6) {
+  left: 36px;
+  top: 100px;
+  animation-delay: 0.75s;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* MOVIMENTO DO FOGUETE NA TELA */
+@keyframes rocketFly {
+  0% {
+    transform: translate(-12vw, 95vh);
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  35% {
+    transform: translate(38vw, 42vh);
+    opacity: 1;
+  }
+  
+  50% {
+    transform: translate(110vw, -18vh);
+    opacity: 0;
+  }
+
+  80% {
+    transform: translate(110vw, -18vh);
+    opacity: 0;
+  }
+
+  90% {
+    transform: translate(110vw, -18vh);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(110vw, -18vh);
+    opacity: 0;
+  }
+}
+
+/* LEVE BALANÇO */
+@keyframes rocketTilt {
+  0% {
+    transform: translate(-50%, -50%) rotate(58deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(53deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(58deg);
+  }
+}
+
+/* PULSAÇÃO DO RASTRO */
+@keyframes trailPulse {
+  0% {
+    opacity: 0.65;
+    height: 96px;
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    height: 120px;
+    filter: blur(3px);
+  }
+}
+
+/* EXPLOSÃO/ESCAPE DAS PARTÍCULAS */
+@keyframes particleBurst {
+  0% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-56px, 40px) scale(0.1);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,90 @@
+---
+import "../styles/global.css";
+
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
+
+if (accessToken && refreshToken) {
+  return Astro.redirect("/admin");
+}
+---
+
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClevProj | Login</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+  </head>
+
+  <body
+    class="bg-black text-white min-h-screen flex items-center justify-center"
+  >
+    <main class="w-full max-w-md p-6">
+      <form
+        action="/api/auth/signin"
+        method="post"
+        class="flex flex-col gap-4 bg-zinc-900 p-6 rounded-2xl border border-zinc-800"
+      >
+        <h1 class="text-2xl font-bold">Login do Admin</h1>
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Seu email"
+          required
+          class="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 outline-none"
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Sua senha"
+          required
+          class="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 outline-none"
+        />
+
+        <button
+          type="submit"
+          class="bg-white text-black font-semibold rounded-lg px-4 py-3"
+        >
+          Entrar
+        </button>
+        <a
+          href="/#"
+          class="bg-white text-black text-center font-semibold rounded-lg px-4 py-3"
+        >
+          Voltar
+        </a>
+      </form>
+    </main>
+
+    <script>
+      const form = document.querySelector("form") as HTMLFormElement;
+      const message = document.getElementById("login-message");
+
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        const response = await fetch("/api/auth/signin", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+
+        const text = await response.text();
+
+        if (message) {
+          message.textContent = text || "Erro ao fazer login.";
+        }
+      });
+    </script>
+  </body>
+</html>

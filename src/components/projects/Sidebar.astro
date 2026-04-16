@@ -1,0 +1,86 @@
+---
+import SidebarItem from "./SidebarItem.astro";
+
+const items = [
+  {
+    id: "stack",
+    title: "Stack",
+    expanded: false,
+    filters: [
+      { id: "react", label: "React" },
+      { id: "astro", label: "Astro" },
+      { id: "node", label: "Node.js" },
+    ],
+  },
+  {
+    id: "tipo",
+    title: "Tipo",
+    expanded: false,
+    filters: [
+      { id: "web", label: "Web" },
+      { id: "mobile", label: "Mobile" },
+      { id: "api", label: "API" },
+    ],
+  },
+  {
+    id: "status",
+    title: "Status",
+    expanded: false,
+    filters: [
+      { id: "prod", label: "Em produção" },
+      { id: "wip", label: "Em andamento" },
+    ],
+  },
+];
+---
+
+<aside
+  class="flex h-full w-full flex-col overflow-y-auto bg-zinc-950 p-4 sm:p-6 lg:w-[280px] lg:p-8 xl:w-[300px]"
+>
+  <div class="flex-1 space-y-4 overflow-y-auto">
+    {items.map((item) => (
+      <SidebarItem
+        id={item.id}
+        title={item.title}
+        expanded={item.expanded}
+        filters={item.filters}
+      />
+    ))}
+  </div>
+</aside>
+
+<script is:inline>
+  const root = document.currentScript?.previousElementSibling;
+  if (root instanceof HTMLElement) {
+    root.addEventListener("click", (e) => {
+      const btn = (e.target instanceof Element ? e.target.closest("[data-sidebar-item]") : null);
+      if (!(btn instanceof HTMLButtonElement)) return;
+
+      const clickedId = btn.getAttribute("data-item-id");
+      if (!clickedId) return;
+
+      const clickedWasOpen = btn.getAttribute("aria-expanded") === "true";
+      const shouldOpenClicked = !clickedWasOpen;
+
+      const allButtons = root.querySelectorAll("[data-sidebar-item]");
+      for (const b of allButtons) {
+        const isClicked = b.getAttribute("data-item-id") === clickedId;
+        const isOpen = isClicked ? shouldOpenClicked : false;
+        b.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+        const icon = b.querySelector("[data-expand-icon]");
+        if (icon instanceof HTMLElement) {
+          icon.classList.toggle("-rotate-90", isOpen);
+          icon.classList.toggle("rotate-0", !isOpen);
+        }
+
+        const controls = b.getAttribute("aria-controls");
+        if (!controls) continue;
+        const panel = root.querySelector(`#${CSS.escape(controls)}`);
+        if (!(panel instanceof HTMLElement)) continue;
+        panel.classList.toggle("hidden", !isOpen);
+        panel.classList.toggle("block", isOpen);
+      }
+    });
+  }
+</script>

@@ -1,0 +1,49 @@
+<section class="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_35%,#070427_0%,#090538_50%,#000_100%)] reveal">
+  <div class="mx-auto flex min-h-[40vh] w-[90%] max-w-6xl items-center py-20 mt-20">
+    <div class="max-w-3xl z-10 relative">
+      <span class="mb-4 inline-block rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1 text-sm text-cyan-300">
+        Contato
+      </span>
+
+      <h1 class="text-4xl font-bold leading-tight text-white md:text-6xl">
+        Vamos tirar sua ideia do papel
+      </h1>
+
+      <p class="mt-6 text-lg leading-8 text-zinc-300">
+        Fale com a nossa equipe para criar uma landing page, site institucional
+        ou presença digital com visual profissional e foco em resultado.
+      </p>
+    </div>
+  </div>
+</section>
+<div id="stars" class="stars z-0"></div>
+
+
+<script>
+      const starsContainer = document.getElementById("stars");
+
+      if (starsContainer) {
+        const totalStars = 220;
+
+        for (let i = 0; i < totalStars; i++) {
+          const star = document.createElement("div");
+
+          const size = Math.random() * 3 + 1;
+
+          star.style.position = "absolute";
+          star.style.width = `${size}px`;
+          star.style.height = `${size}px`;
+          star.style.background = "white";
+          star.style.borderRadius = "50%";
+
+          star.style.top = Math.random() * 100 + "%";
+          star.style.left = Math.random() * 100 + "%";
+
+          star.style.opacity = `${Math.random()}`;
+
+          star.style.animation = `starFloat ${Math.random() * 50 + 50}s linear infinite`;
+
+          starsContainer.appendChild(star);
+        }
+      }
+    </script>

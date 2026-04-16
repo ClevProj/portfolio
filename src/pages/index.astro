@@ -1,0 +1,217 @@
+---
+import "../styles/global.css";
+import rocket from "../assets/images/rocket.gif";
+import Header from "../components/Header.astro";
+import Hero from "../components/Hero.astro";
+import FaqSection from "../components/FaqSection.astro";
+import TopBar from "../components/projects/TopBar.astro";
+import ProjectGrid from "../components/projects/ProjectGrid.astro";
+import Sidebar from "../components/projects/Sidebar.astro";
+import ProjectsSection from "../components/projects/ProjectsSection.jsx";
+import Footer from "../components/Footer.astro";
+---
+
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>ClevProj | Início</title>
+  </head>
+
+  <body class="bg-black text-white">
+    <Header />
+
+    <!-- HERO -->
+    <section
+      id="hero-section"
+      class="relative lg:sticky lg:top-0 min-h-screen overflow-hidden rounded-[32px] bg-[radial-gradient(circle_at_50%_35%,#070427_0%,#090538_50%,#000_100%)]"
+    >
+      <div
+        class="space-bg pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      >
+        <div id="stars" class="stars"></div>
+
+        <div class="rocket-wrap">
+          <div class="rocket-trail"></div>
+          <div class="rocket-particles">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <img src={rocket.src} alt="Foguete" class="rocket" />
+        </div>
+      </div>
+
+      <section id="hero-content" class="relative z-10">
+        <Hero />
+      </section>
+    </section>
+
+    <script>
+      const starsContainer = document.getElementById("stars");
+
+      if (starsContainer) {
+        const totalStars = 220;
+
+        for (let i = 0; i < totalStars; i++) {
+          const star = document.createElement("div");
+
+          const size = Math.random() * 3 + 1;
+
+          star.style.position = "absolute";
+          star.style.width = `${size}px`;
+          star.style.height = `${size}px`;
+          star.style.background = "white";
+          star.style.borderRadius = "50%";
+
+          star.style.top = Math.random() * 100 + "%";
+          star.style.left = Math.random() * 100 + "%";
+
+          star.style.opacity = `${Math.random()}`;
+
+          star.style.animation = `starFloat ${Math.random() * 50 + 50}s linear infinite`;
+
+          starsContainer.appendChild(star);
+        }
+      }
+    </script>
+
+    <!-- WRAPPER DO PROJECTS -->
+    <section
+      id="projects-wrapper"
+      class="relative z-20 -mt-12 min-h-[150vh] px-4 sm:-mt-16 lg:-mt-24"
+    >
+      <div
+        id="projects-section"
+        class="sticky top-28 mx-auto h-[520px] max-w-[1200px] lg:h-[820px]"
+      >
+        <div
+          id="projects-content"
+          class="h-full rounded-[32px] border border-blue-500/20 bg-black shadow-[0_20px_80px_rgba(0,0,0,0.7)] will-change-transform"
+        >
+          <ProjectsSection client:load />
+        </div>
+      </div>
+    </section>
+
+    <section id="faq-section" class="relative z-30">
+      <FaqSection />
+    </section>
+
+    <Footer />
+
+    <script>
+      const hero = document.getElementById(
+        "hero-content",
+      ) as HTMLElement | null;
+      const projectsSection = document.getElementById(
+        "projects-section",
+      ) as HTMLElement | null;
+      const projectsContent = document.getElementById(
+        "projects-content",
+      ) as HTMLElement | null;
+      const faqSection = document.getElementById(
+        "faq-section",
+      ) as HTMLElement | null;
+
+      let current = 0;
+      let target = 0;
+      let projectsFixed = false;
+      let lastT = performance.now();
+
+      function lerp(start: number, end: number, t: number): number {
+        return start + (end - start) * t;
+      }
+
+      function clamp(value: number, min: number, max: number): number {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function animate(): void {
+        const now = performance.now();
+        const dt = Math.min(Math.max(now - lastT, 0), 64); // ms (evita saltos grandes)
+        lastT = now;
+
+        target = window.scrollY;
+        // smoothing baseado em tempo (mais smooth e consistente)
+        const tau = 200; // ms (maior = mais suave)
+        const t = 1 - Math.exp(-dt / tau);
+        current = lerp(current, target, t);
+
+        const viewportH = window.innerHeight;
+
+        if (hero) {
+          const heroProgress = clamp(current / viewportH, 0, 1);
+
+          const heroScale = 1 - heroProgress * 0.22;
+          const heroTranslateY = heroProgress * -60;
+          const heroOpacity = 1 - heroProgress * 0.18;
+
+          hero.style.transform = `translateY(${heroTranslateY}px) scale(${heroScale})`;
+          hero.style.opacity = `${heroOpacity}`;
+        }
+
+        if (projectsSection && projectsContent && faqSection) {
+          const nextRect = faqSection.getBoundingClientRect();
+          const sectionRect = projectsSection.getBoundingClientRect();
+
+          // quando a próxima section começar a aparecer
+          const exitStart = nextRect.top <= viewportH;
+
+          // quando ela avançar mais, termina a animação
+          const exitProgress = clamp(
+            (viewportH - nextRect.top) / (viewportH * 2),
+            0,
+            1,
+          );
+
+          if (exitStart) {
+            if (!projectsFixed) {
+              // congela exatamente na posição atual
+              projectsSection.style.position = "fixed";
+              projectsSection.style.top = `${sectionRect.top}px`;
+              projectsSection.style.left = `${sectionRect.left}px`;
+              projectsSection.style.width = `${sectionRect.width}px`;
+              projectsSection.style.height = `${sectionRect.height}px`;
+              projectsSection.style.margin = "0";
+              projectsFixed = true;
+            }
+
+            const rawScale = 1 - exitProgress * 0.7;
+            const scale = Math.max(rawScale, 0.4);
+            projectsContent.style.opacity = "1";
+
+            projectsContent.style.transformOrigin = "center center";
+            projectsContent.style.transform = `scale(${scale})`;
+          } else {
+            if (projectsFixed) {
+              // volta ao normal se subir o scroll
+              projectsSection.style.position = "";
+              projectsSection.style.top = "";
+              projectsSection.style.left = "";
+              projectsSection.style.width = "";
+              projectsSection.style.height = "";
+              projectsSection.style.margin = "";
+              projectsFixed = false;
+            }
+
+            projectsContent.style.transformOrigin = "center center";
+            projectsContent.style.transform = "scale(1)";
+            projectsContent.style.opacity = "1";
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>

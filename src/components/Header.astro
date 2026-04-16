@@ -1,0 +1,141 @@
+---
+import logo from "../assets/images/logo.png";
+---
+
+<header class="fixed inset-x-0 top-0 z-[9999]">
+  <div class="bg-black/40 backdrop-blur-md">
+    <div class="container mx-auto flex items-center justify-between px-4 py-4">
+      <a href="/">
+        <img src={logo.src} alt="Logo" class="h-8 w-auto" />
+      </a>
+
+      <!-- MENU DESKTOP -->
+      <nav class="hidden md:block">
+        <ul class="flex items-center gap-10 font-bold text-xl">
+          <li><a href="/#" class="text-white transition hover:text-gray-300">HOME</a></li>
+          <li>
+            <a href="/#projects-wrapper" class="text-white transition hover:text-gray-300">
+              PROJETOS
+            </a>
+          </li>
+          <li>
+            <a href="/#faq-section" class="text-white transition hover:text-gray-300">
+              FAQ
+            </a>
+          </li>
+          <li><a href="/sobre" class="text-white transition hover:text-gray-300">SOBRE</a></li>
+        </ul>
+      </nav>
+
+      <!-- CONTATO DESKTOP -->
+      <a href="/contato" class="hidden md:block">
+        <button
+          class="relative overflow-hidden rounded-full border border-blue-500 px-6 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-blue-600 hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] active:scale-95 active:translate-y-0"
+        >
+          <span class="relative z-10">Contato</span>
+          <span
+            class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 hover:translate-x-full"
+          ></span>
+        </button>
+      </a>
+
+      <!-- HAMBURGER MOBILE -->
+      <button
+        id="open-menu-btn"
+        type="button"
+        class="flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
+        aria-label="Abrir menu"
+      >
+        <span class="block h-[2px] w-6 rounded-full bg-white"></span>
+        <span class="block h-[2px] w-6 rounded-full bg-white"></span>
+        <span class="block h-[2px] w-6 rounded-full bg-white"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- OVERLAY -->
+  <div
+    id="menu-overlay"
+    class="pointer-events-none fixed inset-0 z-[9997] bg-black/60 opacity-0 transition-opacity duration-300 md:hidden"
+  ></div>
+
+  <!-- MENU MOBILE -->
+  <aside
+    id="mobile-menu"
+    class="fixed top-0 right-0 z-[9998] flex h-screen w-[80%] max-w-[320px] translate-x-full flex-col bg-zinc-950/95 p-6 pt-5 backdrop-blur-xl transition-transform duration-300 md:hidden"
+  >
+    <!-- TOPO DO MENU -->
+    <div class="mb-8 flex items-center justify-between">
+      <img src={logo.src} alt="Logo" class="h-7 w-auto" />
+
+      <button
+        id="close-menu-btn"
+        type="button"
+        class="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-2xl text-white transition hover:bg-white/10"
+        aria-label="Fechar menu"
+      >
+        ×
+      </button>
+    </div>
+
+    <!-- LINKS -->
+    <nav class="flex flex-col gap-5 text-lg font-bold">
+      <a href="/#" class="mobile-link text-white transition hover:text-gray-300">HOME</a>
+      <a href="/#projects-wrapper" class="mobile-link text-white transition hover:text-gray-300">
+        PROJETOS
+      </a>
+      <a href="/#faq-section" class="mobile-link text-white transition hover:text-gray-300">
+        FAQ
+      </a>
+      <a href="/sobre" class="mobile-link text-white transition hover:text-gray-300">SOBRE</a>
+    </nav>
+
+    <a href="/contato" class="mobile-link mt-8">
+      <button
+        class="w-full rounded-full border border-blue-500 px-6 py-3 font-bold text-white transition hover:bg-blue-600"
+      >
+        Contato
+      </button>
+    </a>
+  </aside>
+</header>
+
+<script>
+  const openBtn = document.getElementById("open-menu-btn") as HTMLButtonElement | null;
+  const closeBtn = document.getElementById("close-menu-btn") as HTMLButtonElement | null;
+  const menu = document.getElementById("mobile-menu") as HTMLElement | null;
+  const overlay = document.getElementById("menu-overlay") as HTMLElement | null;
+  const links = document.querySelectorAll(".mobile-link") as NodeListOf<HTMLAnchorElement>;
+
+  function openMenu() {
+    if (!menu || !overlay) return;
+
+    menu.classList.remove("translate-x-full");
+    menu.classList.add("translate-x-0");
+
+    overlay.classList.remove("opacity-0", "pointer-events-none");
+    overlay.classList.add("opacity-100");
+
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMenu() {
+    if (!menu || !overlay) return;
+
+    menu.classList.remove("translate-x-0");
+    menu.classList.add("translate-x-full");
+
+    overlay.classList.remove("opacity-100");
+    overlay.classList.add("opacity-0", "pointer-events-none");
+
+    document.body.style.overflow = "";
+  }
+
+  openBtn?.addEventListener("click", openMenu);
+  closeBtn?.addEventListener("click", closeMenu);
+  overlay?.addEventListener("click", closeMenu);
+
+  links.forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
+</script>

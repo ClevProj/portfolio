@@ -1,0 +1,198 @@
+---
+const faqs = [
+  {
+    q: "Qual o prazo de entrega?",
+    a: "Depende do escopo do projeto. Em geral, landing pages levam de 3 a 7 dias; projetos maiores são estimados após alinhamento.",
+  },
+  {
+    q: "É confiável?",
+    a: "Sim. Trabalhamos com entregas por etapa, validações e comunicação contínua para garantir qualidade e previsibilidade.",
+  },
+  {
+    q: "Precisa de ajuda?",
+    a: "Podemos ajudar desde a ideia até a publicação. Também fazemos manutenção, melhorias e suporte pós-entrega.",
+  },
+];
+
+const benefits = [
+  {
+    title: "Pagamento Seguro",
+    desc: "Transações protegidas e rápidas via Pix.",
+    icon: "lock",
+  },
+  {
+    title: "Entrega Garantida",
+    desc: "Prazos claros e entrega acompanhada.",
+    icon: "clock",
+  },
+  {
+    title: "Suporte Rápido",
+    desc: "Atendimento dedicado e ágil para clientes.",
+    icon: "support",
+  },
+];
+---
+
+<section id="next-section" class="bg-zinc-950 px-3 py-14 sm:px-4 sm:py-20">
+  <div
+    id="next-content"
+    class="mx-auto max-w-[1200px] overflow-hidden rounded-[24px] sm:rounded-[32px] border border-white/10 shadow-[20px_20px_20px_rgba(0,0,0,0.9)]"
+  >
+    <div class="grid gap-8 bg-black p-5 sm:gap-10 sm:p-8 lg:grid-cols-2 lg:gap-16 lg:p-12">
+      <div class="flex flex-col justify-between gap-8 sm:gap-10">
+        <div>
+          <h2 class="text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            Perguntas frequentes
+          </h2>
+          <p class="mt-3 max-w-md text-sm text-white/70 sm:mt-4 sm:text-base">
+            Veja as perguntas mais frequentes sobre nossos produtos.
+          </p>
+        </div>
+
+        <div>
+          <button
+            type="button"
+            class="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold tracking-wide text-white transition hover:bg-white/10"
+          >
+            Perguntar algo
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-3 sm:space-y-4">
+        {faqs.map((item) => (
+          <details
+            class="group rounded-[20px] border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-md transition open:rounded-[20px] sm:px-5"
+          >
+            <summary class="flex cursor-pointer list-none items-start justify-between gap-3 text-sm font-semibold text-white/90 sm:items-center sm:gap-4 sm:text-base">
+              <div class="flex min-w-0 items-start gap-3 sm:items-center">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/5 ring-1 ring-white/10 sm:h-10 sm:w-10">
+                  <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 text-white/80 sm:h-5 sm:w-5">
+                    <path
+                      d="M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10Z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
+                    <path
+                      d="M12 7v5l3 2"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+
+                <span class="block leading-snug whitespace-normal break-words">
+                  {item.q}
+                </span>
+              </div>
+
+              <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 ring-1 ring-white/10 sm:h-9 sm:w-9">
+                <span
+                  class="select-none text-base font-semibold text-white/80 transition-transform duration-300 ease-out group-open:-rotate-90 sm:text-lg"
+                >
+                  ◂
+                </span>
+              </span>
+            </summary>
+
+            <div class="pt-3 text-sm leading-relaxed text-white/65 sm:pt-4 sm:text-sm">
+              {item.a}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+
+    <div class="grid border-t border-white/10 bg-black/20 lg:grid-cols-3">
+      {benefits.map((b, idx) => (
+        <div
+          class={`flex items-start gap-4 px-5 py-6 sm:px-8 sm:py-8 ${
+            idx < 2 ? "border-b border-white/10 lg:border-b-0 lg:border-r" : ""
+          } border-white/10`}
+        >
+          <div class="shrink-0 text-white/85">
+            {b.icon === "lock" && (
+              <svg viewBox="0 0 24 24" fill="none" class="h-8 w-8 sm:h-10 sm:w-10">
+                <path
+                  d="M7 10V8a5 5 0 0 1 10 0v2"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M6.5 10h11A2.5 2.5 0 0 1 20 12.5v6A2.5 2.5 0 0 1 17.5 21h-11A2.5 2.5 0 0 1 4 18.5v-6A2.5 2.5 0 0 1 6.5 10Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M12 15.3v2.2"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            )}
+
+            {b.icon === "clock" && (
+              <svg viewBox="0 0 24 24" fill="none" class="h-8 w-8 sm:h-10 sm:w-10">
+                <path
+                  d="M12 21a9 9 0 1 0-9-9 9 9 0 0 0 9 9Z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                />
+                <path
+                  d="M12 7v5l3 2"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            )}
+
+            {b.icon === "support" && (
+              <svg viewBox="0 0 24 24" fill="none" class="h-8 w-8 sm:h-10 sm:w-10">
+                <path
+                  d="M4 12a8 8 0 0 1 16 0"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M6.5 12v4a2 2 0 0 0 2 2H10"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M17.5 12v4a2 2 0 0 1-2 2H14"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M10 20h4"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            )}
+          </div>
+
+          <div class="min-w-0">
+            <div class="text-sm font-semibold text-white/90 sm:text-base">
+              {b.title}
+            </div>
+            <div class="mt-1 text-xs leading-relaxed text-white/55 sm:text-sm">
+              {b.desc}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

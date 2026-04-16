@@ -1,0 +1,74 @@
+---
+const { id, title = "Filtro", expanded = false, filters = [] } = Astro.props;
+
+type Filter = { id: string; label: string };
+const safeId = String(id ?? "");
+const panelId = safeId ? `${safeId}-panel` : undefined;
+---
+
+<div class="rounded-[24px] bg-zinc-900/60 ring-1 ring-white/5">
+  <button
+    type="button"
+    class={`flex w-full items-center gap-3 rounded-[24px] px-4 py-3 text-left transition hover:bg-white/5 ${
+      expanded ? "" : ""
+    }`}
+    data-sidebar-item
+    data-item-id={safeId}
+    aria-expanded={expanded ? "true" : "false"}
+    aria-controls={panelId}
+  >
+    <div class="h-8 w-8 shrink-0 rounded-full bg-zinc-800 ring-1 ring-white/10">
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <div class="truncate text-sm font-medium text-white/90">{title}</div>
+      <div class="truncate text-xs text-white/40">
+        {filters.length ? `${filters.length} opções` : "Sem opções"}
+      </div>
+    </div>
+
+    <div class="grid h-8 w-8 place-items-center rounded-full bg-zinc-800 text-white/70 ring-1 ring-white/10">
+      <span
+        data-expand-icon
+        class={`select-none text-base font-semibold leading-none transition-transform duration-300 ease-out ${
+          expanded ? "-rotate-90" : "rotate-0"
+        }`}
+        aria-hidden="true"
+      >
+        ◂
+      </span>
+    </div>
+  </button>
+
+  <div
+    id={panelId}
+    class={`${expanded ? "block" : "hidden"} px-4 pb-4`}
+    data-sidebar-panel
+  >
+    <div class="mt-2 space-y-2">
+      {
+        filters.length ? (
+          <ul class="space-y-2">
+            {filters.map((f: Filter) => (
+              <li>
+                <label class="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-white/20 bg-zinc-950 text-blue-500"
+                    data-filter
+                    data-filter-id={f.id}
+                  />
+                  <span class="truncate">{f.label}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="rounded-[16px] bg-zinc-800/60 p-3 text-sm text-white/50">
+            Adicione filtros neste item.
+          </div>
+        )
+      }
+    </div>
+  </div>
+</div>
